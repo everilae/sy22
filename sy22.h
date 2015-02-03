@@ -394,7 +394,7 @@ namespace sy22 {
 			sum += D.get_sum();
 			sum += vector.get_sum();
 
-			checksum = midi::UChar(-sum)
+			checksum = midi::UChar(-sum);
 		}
 	};
 
@@ -434,7 +434,7 @@ namespace sy22 {
 		for (int i = 0; i < sizeof(Voice); i++) {
 			// checksum is 2's complement of sum of all bytes in
 			// voice data block and header, (-S & 0x7F)
-			sum += reinterpret_cast<const char*>(&voice)[i];
+			sum += reinterpret_cast<const unsigned char*>(&voice)[i];
 		}
 
 		svd.checksum = -sum & 0x7F;
