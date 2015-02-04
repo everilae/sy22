@@ -377,25 +377,7 @@ namespace sy22 {
 		unsigned char null;
 		midi::byte_t checksum;
 
-		void update_checksum() {
-			int sum = reserved_0 + reserved_1 + effect;
-			for (auto c: name) {
-				sum += c;
-			}
-			sum += midi::UChar(configuration_pitch_bend);
-			sum += after_touch_mod_wheel;
-			sum += midi::SChar(after_touch_pitch_shift);
-			sum += env_delay;
-			sum += midi::SChar(common_ar);
-			sum += midi::SChar(common_rr);
-			sum += A.get_sum();
-			sum += B.get_sum();
-			sum += C.get_sum();
-			sum += D.get_sum();
-			sum += vector.get_sum();
-
-			checksum = midi::UChar(-sum);
-		}
+		void update_checksum();
 	};
 
 	Voice make_voice() {
@@ -403,43 +385,19 @@ namespace sy22 {
 	}
 
 	struct SingleVoiceDump {
-		const unsigned char start_of_sysex;
-		const unsigned char reserved_0;
+		unsigned char start_of_sysex;
+		unsigned char reserved_0;
 		unsigned char channel;
-		const unsigned char reserved_1;
-		const unsigned char count_msb;
-		const unsigned char count_lsb;
-		const char header[10];
-		const Voice voice_data;
+		unsigned char reserved_1;
+		unsigned char count_msb;
+		unsigned char count_lsb;
+		char header[10];
+		Voice voice_data;
 		unsigned char checksum;
-		const unsigned char eox;
+		unsigned char eox;
 	};
 
-	SingleVoiceDump make_single_voice_dump(const Voice& voice) {
-		SingleVoiceDump svd = {
-			.start_of_sysex = 0xF0,
-			.reserved_0 = 0x43,
-			.channel = 0,
-			.reserved_1 = 0x7E,
-			.count_msb = 0x04,
-			.count_lsb = 0x48,
-			.header = {'P', 'K', ' ', ' ', '2', '2', '0', '3', 'A', 'E'},
-			.voice_data = voice,
-			.checksum = 0,
-			.eox = 0xF7,
-		};
-
-		// header stuff included in sum
-		int sum = 'P' + 'K' + ' ' + ' ' + '2' + '2' + '0' + '3' + 'A' + 'E';
-		for (int i = 0; i < sizeof(Voice); i++) {
-			// checksum is 2's complement of sum of all bytes in
-			// voice data block and header, (-S & 0x7F)
-			sum += reinterpret_cast<const unsigned char*>(&voice)[i];
-		}
-
-		svd.checksum = -sum & 0x7F;
-		return svd;
-	}
+	SingleVoiceDump make_single_voice_dump(const Voice& voice);
 
 };
 
