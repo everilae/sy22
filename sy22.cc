@@ -3,7 +3,7 @@
 
 namespace sy22 {
 
-	const set<int>overflow_bytes = {
+	const set<int> overflow_bytes = {
 		// Common
 		0x0B, 0x0E, 0x11, 0x13,
 		// Element A
