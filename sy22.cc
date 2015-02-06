@@ -66,8 +66,8 @@ namespace sy22 {
 // POD struct initialization
 #define SY22_SVD_HEADER {'P', 'K', ' ', ' ', '2', '2', '0', '3', 'A', 'E'}
 
-	template <class I>
-	inline int sum_of(const std::initializer_list<I>&& list) {
+	template <class T>
+	inline int sum_of(const std::initializer_list<T>&& list) {
 		return std::accumulate(list.begin(), list.end(), 0);
 	}
 
@@ -79,17 +79,10 @@ namespace sy22 {
 	 * it feels better than heap.
 	 */
 	SingleVoiceDump make_single_voice_dump(const Voice& voice) {
-		int sum = sum_of(SY22_SVD_HEADER);
-		// TODO: There must be a more C++ish way of doing this, right?
 		const unsigned char* voice_data_ptr =
 			reinterpret_cast<const unsigned char*>(&voice);
-		for (int i = 0; i < sizeof(Voice); i++) {
-			// Checksum is 2's complement of sum of all bytes in
-			// voice data block and header, (-S & 0x7F).
-			// Not quite sure if overflow bytes should be handled here.
-			sum += voice_data_ptr[i];
-		}
-
+		int sum = sum_of(SY22_SVD_HEADER) +
+			std::accumulate(voice_data_ptr, voice_data_ptr + sizeof(Voice), 0);
 		return {
 			.start_of_sysex = 0xF0,
 			.reserved_0 = 0x43,
