@@ -1,5 +1,6 @@
 #include <sy22.h>
 #include <set>
+#include <numeric>
 
 namespace sy22 {
 
@@ -32,7 +33,8 @@ namespace sy22 {
 
 	int byte_sum(const Voice& v) {
 		int sum = 0;
-		const unsigned char* voice_data_ptr = reinterpret_cast<const unsigned char*>(&v);
+		const unsigned char* voice_data_ptr =
+			reinterpret_cast<const unsigned char*>(&v);
 		for (int i = 0; i < sizeof(Voice); i++) {
 			unsigned char b = voice_data_ptr[i];
 			// Check if given byte is an overflow byte
@@ -60,6 +62,15 @@ namespace sy22 {
 		checksum = midi::UChar(-byte_sum(*this));
 	}
 
+// sucks major balls that initializer_list<T> -> T[] is impossible during
+// POD struct initialization
+#define SY22_SVD_HEADER {'P', 'K', ' ', ' ', '2', '2', '0', '3', 'A', 'E'}
+
+	template <class I>
+	inline int sum_of(const std::initializer_list<I>&& list) {
+		return std::accumulate(list.begin(), list.end(), 0);
+	}
+
 	/**
 	 * Create a new Single Voice Dump message and populate with given
 	 * Voice data.
@@ -68,29 +79,10 @@ namespace sy22 {
 	 * it feels better than heap.
 	 */
 	SingleVoiceDump make_single_voice_dump(const Voice& voice) {
-		SingleVoiceDump svd = {
-			.start_of_sysex = 0xF0,
-			.reserved_0 = 0x43,
-			.channel = 0,
-			.reserved_1 = 0x7E,
-			.count_msb = 0x04,
-			.count_lsb = 0x48,
-			.header = {'P', 'K', ' ', ' ', '2', '2', '0', '3', 'A', 'E'},
-			// copy
-			.voice_data = voice,
-			.checksum = 0,
-			.eox = 0xF7,
-		};
-
-		int sum = 0;
-
-		for (char c : svd.header) {
-			// header stuff included in sum
-			sum += c;
-		}
-
+		int sum = sum_of(SY22_SVD_HEADER);
 		// TODO: There must be a more C++ish way of doing this, right?
-		const unsigned char* voice_data_ptr = reinterpret_cast<const unsigned char*>(&voice);
+		const unsigned char* voice_data_ptr =
+			reinterpret_cast<const unsigned char*>(&voice);
 		for (int i = 0; i < sizeof(Voice); i++) {
 			// Checksum is 2's complement of sum of all bytes in
 			// voice data block and header, (-S & 0x7F).
@@ -98,8 +90,19 @@ namespace sy22 {
 			sum += voice_data_ptr[i];
 		}
 
-		svd.checksum = -sum & 0x7F;
-		return svd;
+		return {
+			.start_of_sysex = 0xF0,
+			.reserved_0 = 0x43,
+			.channel = 0,
+			.reserved_1 = 0x7E,
+			// len(header) + len(voice_data) = 0x248 (0x04 and 0x48 in weird midi bytes)
+			.count_msb = 0x04,
+			.count_lsb = 0x48,
+			.header = SY22_SVD_HEADER,
+			.voice_data = voice,
+			.checksum = static_cast<unsigned char>(-sum & 0x7F),
+			.eox = 0xF7,
+		};
 	}
 
 };
