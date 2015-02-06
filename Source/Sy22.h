@@ -1,7 +1,7 @@
 #ifndef _SY22_H_
 #define _SY22_H_ 1
 
-#include <midi_data.h>
+#include "MidiData.h"
 
 /**
  * http://worsa.republika.pl/yamaha-sy35/sy35form.txt

@@ -1,6 +1,7 @@
-#include <sy22.h>
 #include <set>
 #include <numeric>
+
+#include "Sy22.h"
 
 namespace sy22 {
 
