@@ -3,7 +3,7 @@
 
 namespace sy22 {
 
-	const set<int> overflow_bytes = {
+	const std::set<int> overflow_bytes = {
 		// Common
 		0x0B, 0x0E, 0x11, 0x13,
 		// Element A
@@ -34,13 +34,13 @@ namespace sy22 {
 		int sum = 0;
 		const unsigned char* voice_data_ptr = reinterpret_cast<const unsigned char*>(&v);
 		for (int i = 0; i < sizeof(Voice); i++) {
+			unsigned char b = voice_data_ptr[i];
 			// Check if given byte is an overflow byte
 			if (overflow_bytes.count(i)) {
 				// Overflow bytes are the 8th bit of a byte
-				sum += *voice_data_ptr[i] << 7;
-			} else {
-				sum += *voice_data_ptr[i];
+				b <<= 7;
 			}
+			sum += b;
 		}
 		return sum;
 	}
@@ -60,6 +60,13 @@ namespace sy22 {
 		checksum = midi::UChar(-byte_sum(*this));
 	}
 
+	/**
+	 * Create a new Single Voice Dump message and populate with given
+	 * Voice data.
+	 *
+	 * This moves quite a bit of memory around in stack, but somehow
+	 * it feels better than heap.
+	 */
 	SingleVoiceDump make_single_voice_dump(const Voice& voice) {
 		SingleVoiceDump svd = {
 			.start_of_sysex = 0xF0,
@@ -88,7 +95,7 @@ namespace sy22 {
 			// Checksum is 2's complement of sum of all bytes in
 			// voice data block and header, (-S & 0x7F).
 			// Not quite sure if overflow bytes should be handled here.
-			sum += *voice_data_ptr[i];
+			sum += voice_data_ptr[i];
 		}
 
 		svd.checksum = -sum & 0x7F;
