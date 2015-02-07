@@ -1,1 +1,3 @@
 *.o
+JuceLibraryCode/modules
+Builds/Linux/build
