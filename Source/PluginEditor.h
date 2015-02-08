@@ -32,6 +32,9 @@ private:
     // This reference is provided as a quick way for your editor to
     // access the processor object that created it.
     Sy22PanelAudioProcessor& processor;
+    
+    // Common voice controls
+    Slider effectDepth;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Sy22PanelAudioProcessorEditor)
 };

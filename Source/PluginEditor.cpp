@@ -19,6 +19,15 @@ Sy22PanelAudioProcessorEditor::Sy22PanelAudioProcessorEditor (Sy22PanelAudioProc
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
     setSize (400, 300);
+    
+    // Common voice controls
+    effectDepth.setSliderStyle(Slider::LinearBarVertical);
+    effectDepth.setRange(0, 7, 1);
+    effectDepth.setTextBoxStyle(Slider::NoTextBox, false, 90, 0);
+    effectDepth.setPopupDisplayEnabled(true, this);
+    effectDepth.setTextValueSuffix(" Effect Depth");
+    effectDepth.setValue(1);
+    addAndMakeVisible(&effectDepth);
 }
 
 Sy22PanelAudioProcessorEditor::~Sy22PanelAudioProcessorEditor()
@@ -32,11 +41,14 @@ void Sy22PanelAudioProcessorEditor::paint (Graphics& g)
 
     g.setColour (Colours::black);
     g.setFont (15.0f);
-    g.drawFittedText ("Hello World!", getLocalBounds(), Justification::centred, 1);
+    g.drawFittedText ("SY22 Panel", getLocalBounds(), Justification::centred, 1);
 }
 
 void Sy22PanelAudioProcessorEditor::resized()
 {
     // This is generally where you'll want to lay out the positions of any
     // subcomponents in your editor..
+    
+    // Common voice controls
+    effectDepth.setBounds(40, 30, 20, getHeight() - 60);
 }
