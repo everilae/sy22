@@ -50,6 +50,10 @@ namespace sy22 {
 		return sum;
 	}
 
+	Voice make_voice() {
+		return {0x01, 0x25};
+	}
+
 	void Voice::update_checksum() {
 		//   The 8-bit checksum is calculated in a very similar way to the 7-bit sysex
 		// checksum. When summing all the bytes, the overflows (in brackets) must be
@@ -71,19 +75,10 @@ namespace sy22 {
 	 * Create a new Single Voice Dump message and populate with given
 	 * Voice data.
 	 */
-	SingleVoiceDump::SingleVoiceDump(Voice& voice) :
-		start_of_sysex(0xF0),
-		reserved_0(0x43),
-		channel(0),
-		reserved_1(0x7E),
-		// len(header) + len(voice_data) = 0x248 (0x04 and 0x48 in weird midi bytes)
-		count_msb(0x04),
-		count_lsb(0x48),
-		voice_data(voice),
-		eox(0xF7)
-	{
+	SingleVoiceDump make_svd(Voice &v) {
 		const unsigned char* voice_data_ptr =
 			reinterpret_cast<const unsigned char*>(&voice);
+
 		int sum = std::accumulate(
 				SY22_SVD_HEADER,
 				SY22_SVD_HEADER + sizeof(SY22_SVD_HEADER) - 1,
@@ -92,8 +87,19 @@ namespace sy22 {
 				voice_data_ptr,
 				voice_data_ptr + sizeof(Voice),
 				0);
-		checksum = static_cast<unsigned char>(-sum & 0x7F);
-		memcpy(header, SY22_SVD_HEADER, sizeof(header));
+
+		return {
+			0xF0,
+			0x43,
+			0,
+			0x7E,
+			0x04,
+			0x48,
+			{'P', 'K', ' ', ' ', '2', '2', '0', '3', 'A', 'E'},
+			{v},
+			static_cast<unsigned char>(-sum & 0x7F),
+			0xF7,
+		};
 	}
 
 };

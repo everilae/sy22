@@ -377,7 +377,6 @@ namespace sy22 {
 		unsigned char null;
 		midi::byte_t checksum;
 
-		Voice() : reserved_0(0x01), reserved_1(0x25) {}
 		void update_checksum();
 	};
 
@@ -393,7 +392,7 @@ namespace sy22 {
 		unsigned char checksum;
 		unsigned char eox;
 
-		SingleVoiceDump(Voice&);
+		//SingleVoiceDump(Voice&);
 	};
 
 };
