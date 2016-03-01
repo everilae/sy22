@@ -1,6 +1,8 @@
 #include <set>
 #include <numeric>
 
+#include <cstring>
+
 #include "Sy22.h"
 
 namespace sy22 {
@@ -63,40 +65,35 @@ namespace sy22 {
 		checksum = midi::UChar(-byte_sum(*this));
 	}
 
-// sucks major balls that initializer_list<T> -> T[] is impossible during
-// POD struct initialization
-#define SY22_SVD_HEADER {'P', 'K', ' ', ' ', '2', '2', '0', '3', 'A', 'E'}
-
-	template <class T>
-	inline int sum_of(const std::initializer_list<T>&& list) {
-		return std::accumulate(list.begin(), list.end(), 0);
-	}
+#define SY22_SVD_HEADER "PK  2203AE"
 
 	/**
 	 * Create a new Single Voice Dump message and populate with given
 	 * Voice data.
-	 *
-	 * This moves quite a bit of memory around in stack, but somehow
-	 * it feels better than heap.
 	 */
-	SingleVoiceDump make_single_voice_dump(const Voice& voice) {
+	SingleVoiceDump::SingleVoiceDump(Voice& voice) :
+		start_of_sysex(0xF0),
+		reserved_0(0x43),
+		channel(0),
+		reserved_1(0x7E),
+		// len(header) + len(voice_data) = 0x248 (0x04 and 0x48 in weird midi bytes)
+		count_msb(0x04),
+		count_lsb(0x48),
+		voice_data(voice),
+		eox(0xF7)
+	{
 		const unsigned char* voice_data_ptr =
 			reinterpret_cast<const unsigned char*>(&voice);
-		int sum = sum_of(SY22_SVD_HEADER) +
-			std::accumulate(voice_data_ptr, voice_data_ptr + sizeof(Voice), 0);
-		return {
-			.start_of_sysex = 0xF0,
-			.reserved_0 = 0x43,
-			.channel = 0,
-			.reserved_1 = 0x7E,
-			// len(header) + len(voice_data) = 0x248 (0x04 and 0x48 in weird midi bytes)
-			.count_msb = 0x04,
-			.count_lsb = 0x48,
-			.header = SY22_SVD_HEADER,
-			.voice_data = voice,
-			.checksum = static_cast<unsigned char>(-sum & 0x7F),
-			.eox = 0xF7,
-		};
+		int sum = std::accumulate(
+				SY22_SVD_HEADER,
+				SY22_SVD_HEADER + sizeof(SY22_SVD_HEADER) - 1,
+				0);
+		sum += std::accumulate(
+				voice_data_ptr,
+				voice_data_ptr + sizeof(Voice),
+				0);
+		checksum = static_cast<unsigned char>(-sum & 0x7F);
+		memcpy(header, SY22_SVD_HEADER, sizeof(header));
 	}
 
 };

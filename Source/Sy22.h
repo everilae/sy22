@@ -377,12 +377,9 @@ namespace sy22 {
 		unsigned char null;
 		midi::byte_t checksum;
 
+		Voice() : reserved_0(0x01), reserved_1(0x25) {}
 		void update_checksum();
 	};
-
-	Voice make_voice() {
-		return { 0x01, 0x25, 0x00 };
-	}
 
 	struct SingleVoiceDump {
 		unsigned char start_of_sysex;
@@ -395,9 +392,9 @@ namespace sy22 {
 		Voice voice_data;
 		unsigned char checksum;
 		unsigned char eox;
-	};
 
-	SingleVoiceDump make_single_voice_dump(const Voice& voice);
+		SingleVoiceDump(Voice&);
+	};
 
 };
 
